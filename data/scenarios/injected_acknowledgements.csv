@@ -1,0 +1,2 @@
+acknowledgement_id,alarm_event_id,operator_id,shift_id,ack_timestamp,response_minutes,status
+ACK-ALM-MCH-039-025929-EDGE01,ALM-MCH-039-025929,OP-EDGE-01,SHIFT-EDGE-01,2026-09-30 23:58:48,-2,INVALID_EARLY_ACK

@@ -1,0 +1,2 @@
+action_id,incident_id,action_description,assigned_to,created_at,closed_at,status,verification_status
+ACT-INC-2026-000001-EDGE01,INC-2026-000001,Inspect machine and verify safety interlock,MAINTENANCE_TEAM,2026-10-08 12:33:03,2026-10-08 14:23:03,CLOSED,NOT_VERIFIED

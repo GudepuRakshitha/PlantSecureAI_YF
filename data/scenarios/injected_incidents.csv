@@ -1,0 +1,2 @@
+incident_id,alarm_event_id,machine_id,plant_id,incident_type,severity,created_at,status
+INC-2026-000170,ALM-MCH-015-045125,MCH-015,PLT-001,UNSAFE_MACHINE_RUNNING,LOW,2026-10-01 00:02:01,OPEN

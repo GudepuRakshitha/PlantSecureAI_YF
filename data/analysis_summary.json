@@ -1,0 +1,19 @@
+{
+    "baseline_alarm_events": 50000,
+    "scenario_alarm_event_rows": 3,
+    "total_alarm_event_rows_analyzed": 50003,
+    "total_exceptions": 8935,
+    "exceptions_by_type": {
+        "LATE_ACKNOWLEDGEMENT": 8930,
+        "ACK_BEFORE_ALARM": 1,
+        "INTERLOCK_STATE_MISMATCH": 1,
+        "INCIDENT_WITHOUT_VALID_TRIGGER": 1,
+        "DUPLICATE_ALARM_REPLAY": 1,
+        "CLOSED_WITHOUT_VERIFICATION": 1
+    },
+    "exceptions_by_severity": {
+        "MEDIUM": 8930,
+        "HIGH": 3,
+        "CRITICAL": 2
+    }
+}

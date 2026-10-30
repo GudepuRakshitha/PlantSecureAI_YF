@@ -1,0 +1,5 @@
+plant_id,plant_name,location,status
+PLT-001,Factory Plant 1,Hyderabad,ACTIVE
+PLT-002,Factory Plant 2,Bangalore,ACTIVE
+PLT-003,Factory Plant 3,Chennai,ACTIVE
+PLT-004,Factory Plant 4,Pune,ACTIVE

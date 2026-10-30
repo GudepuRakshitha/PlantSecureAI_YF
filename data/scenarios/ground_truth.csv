@@ -1,0 +1,6 @@
+case_id,scenario_type,entity,record_id,description
+EDGE-001,ACK_BEFORE_ALARM,Acknowledgement,ACK-ALM-MCH-039-025929-EDGE01,Acknowledgement occurs two minutes before the alarm event.
+EDGE-002,IMPOSSIBLE_INTERLOCK_STATE,Interlock,INT-001-01,Current interlock state conflicts with the required safe state.
+EDGE-003,INCIDENT_WITHOUT_TRIGGER,Incident,INC-2026-000170,"Incident is linked to a LOW severity STOPPED event, which does not meet the unsafe-running rule."
+EDGE-004,ALARM_FLOOD_DUPLICATE_REPLAY,AlarmEvent,ALM-MCH-039-034656,The same alarm event is replayed three additional times with the same event ID.
+EDGE-005,CLOSED_WITHOUT_VERIFICATION,CorrectiveAction,ACT-INC-2026-000001-EDGE01,Corrective action is marked CLOSED without verification.
