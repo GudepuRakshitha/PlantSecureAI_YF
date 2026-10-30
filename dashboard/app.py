@@ -24,6 +24,7 @@ import plotly.express as px  # noqa: E402
 import streamlit as st  # noqa: E402
 
 from dashboard import components as ui  # noqa: E402
+from dashboard import profile  # noqa: E402
 from dashboard import theme  # noqa: E402
 from src import config, data_access, metrics, schema  # noqa: E402
 
@@ -48,7 +49,19 @@ PAGES = (
     "Corrective Actions",
     "Exception Analysis",
     "Data Explorer",
+    "Developer Profile",
 )
+
+PAGE_ICONS = {
+    "Overview": "📊",
+    "Alarm Monitoring": "🔔",
+    "Acknowledgement Analytics": "⏱️",
+    "Incident Management": "🛡️",
+    "Corrective Actions": "🔧",
+    "Exception Analysis": "🔍",
+    "Data Explorer": "🗂️",
+    "Developer Profile": "👤",
+}
 
 ALL_PLANTS = "All plants"
 ALL_MACHINES = "All machines"
@@ -171,7 +184,7 @@ def render_sidebar() -> tuple[str, str]:
                         stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
               </div>
-              <div>
+              <div class="brand-text">
                 <div class="brand-name">SAFEGUARD</div>
                 <div class="brand-sub">Industrial Safety Intelligence</div>
               </div>
@@ -187,6 +200,7 @@ def render_sidebar() -> tuple[str, str]:
             PAGES,
             key="navigation",
             label_visibility="collapsed",
+            format_func=lambda p: f"{PAGE_ICONS.get(p, '')}  {p}",
         )
 
         st.markdown('<div class="sidebar-divider"></div>', unsafe_allow_html=True)
@@ -209,27 +223,22 @@ def render_sidebar() -> tuple[str, str]:
 
 
 def render_header(mode: str) -> None:
-    """Draw the page header, dataset indicator and refresh control."""
+    """Draw the page header, dataset indicator and scenario alert when active."""
     dataset_label = config.DATASET_LABELS[mode]
     tone = "info" if mode == "baseline" else "warn"
-    refreshed = latest_data_timestamp(mode).strftime("%d %b %Y · %H:%M")
 
-    left, right = st.columns([5.2, 1.45], vertical_alignment="top")
-    with left:
-        st.markdown(
-            """
-            <div class="page-title">Industrial Safety Monitoring</div>
-            <div class="page-subtitle">Plant operations, alarm intelligence and
-            incident oversight.</div>
-            """,
-            unsafe_allow_html=True,
-        )
-    with right:
-        st.markdown(
-            f'<div class="header-meta">{ui.badge(dataset_label, tone)}'
-            f'<div class="meta-line">Refreshed {refreshed}</div></div>',
-            unsafe_allow_html=True,
-        )
+    st.markdown(
+        f"""
+        <div class="page-header-container">
+          <div class="page-title-row">
+            <h1 class="page-title">Industrial Safety Monitoring</h1>
+            <span class="badge badge-{tone}">{ui.esc(dataset_label)}</span>
+          </div>
+          <div class="page-subtitle">Plant operations, alarm intelligence and incident oversight.</div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
     if mode == "scenario":
         ui.notice(
@@ -1829,43 +1838,49 @@ def main() -> None:
         st.stop()
         return
 
-    render_header(mode)
-    filters, _ = render_filters(data, mode)
-    data["_filters"] = filters
-    state = build_state(data, filters)
+    if page == "Developer Profile":
+        profile.render_developer_profile()
+        activations_count = len(data["events"])
+    else:
+        st.session_state["_last_dashboard_page"] = page
+        render_header(mode)
+        filters, _ = render_filters(data, mode)
+        data["_filters"] = filters
+        state = build_state(data, filters)
 
-    if state["events"].empty and page in ("Overview", "Alarm Monitoring"):
-        ui.notice(
-            "No alarm activations match the current filters. Widen the plant, machine, "
-            "severity or date selection.",
-            tone="info",
-        )
-    elif len(state["events"]) < len(data["events"]):
-        st.caption(
-            f"Filtered view: {len(state['events']):,} of "
-            f"{len(data['events']):,} alarm activations."
-        )
+        if state["events"].empty and page in ("Overview", "Alarm Monitoring"):
+            ui.notice(
+                "No alarm activations match the current filters. Widen the plant, machine, "
+                "severity or date selection.",
+                tone="info",
+            )
+        elif len(state["events"]) < len(data["events"]):
+            st.caption(
+                f"Filtered view: {len(state['events']):,} of "
+                f"{len(data['events']):,} alarm activations."
+            )
 
-    try:
-        if page == "Overview":
-            page_overview(data, state)
-        elif page == "Alarm Monitoring":
-            page_alarms(data, state)
-        elif page == "Acknowledgement Analytics":
-            page_acknowledgements(data, state)
-        elif page == "Incident Management":
-            page_incidents(data, state)
-        elif page == "Corrective Actions":
-            page_actions(data, state)
-        elif page == "Exception Analysis":
-            page_exceptions(data, state)
-        elif page == "Data Explorer":
-            page_explorer(data, state)
-    except Exception as error:  # noqa: BLE001 - never show a raw traceback
-        st.error("This view could not be rendered for the current selection.")
-        with st.expander("Technical details"):
-            st.code(f"{type(error).__name__}: {error}")
-        return
+        try:
+            if page == "Overview":
+                page_overview(data, state)
+            elif page == "Alarm Monitoring":
+                page_alarms(data, state)
+            elif page == "Acknowledgement Analytics":
+                page_acknowledgements(data, state)
+            elif page == "Incident Management":
+                page_incidents(data, state)
+            elif page == "Corrective Actions":
+                page_actions(data, state)
+            elif page == "Exception Analysis":
+                page_exceptions(data, state)
+            elif page == "Data Explorer":
+                page_explorer(data, state)
+        except Exception as error:  # noqa: BLE001 - never show a raw traceback
+            st.error("This view could not be rendered for the current selection.")
+            with st.expander("Technical details"):
+                st.code(f"{type(error).__name__}: {error}")
+            return
+        activations_count = len(state["events"])
 
     with st.sidebar:
         st.markdown('<div class="sidebar-divider"></div>', unsafe_allow_html=True)
@@ -1878,8 +1893,10 @@ def main() -> None:
         st.caption(
             f"{config.DATASET_LABELS[mode]}  \n"
             f"Seed {config.SEED}  \n"
-            f"{len(state['events']):,} activations in view"
+            f"{activations_count:,} activations in view"
         )
+        profile.render_sidebar_profile(is_active=(page == "Developer Profile"))
+        profile.render_sidebar_attribution()
 
 
 if __name__ == "__main__":

@@ -98,8 +98,10 @@ def kpi_grid(cards: Iterable[Mapping[str, str]]) -> None:
     Each card accepts ``label``, ``value``, ``desc`` and optionally ``tone``
     (good/warn/bad/neutral) plus ``status`` for the small footer line.
     """
+    card_list = list(cards)
+    grid_cls = f"kpi-grid kpi-grid-{len(card_list)}" if len(card_list) in (3, 4, 5, 6) else "kpi-grid"
     blocks = []
-    for card in cards:
+    for card in card_list:
         tone = card.get("tone", "neutral")
         status = card.get("status")
         footer = (
@@ -115,7 +117,7 @@ def kpi_grid(cards: Iterable[Mapping[str, str]]) -> None:
             f'<div class="kpi-desc">{esc(card.get("desc", ""))}</div>'
             f"{footer}</div>"
         )
-    st.markdown(f'<div class="kpi-grid">{"".join(blocks)}</div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="{grid_cls}">{"".join(blocks)}</div>', unsafe_allow_html=True)
 
 
 def insight_list(items: Iterable[Mapping[str, str]]) -> None:

@@ -1,4 +1,4 @@
 # Development / CI dependencies.
 #     python -m pip install -r requirements-dev.txt
 -r requirements.txt
-pytest==9.2.0
+pytest>=8.0.0,<9.0.0

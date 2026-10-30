@@ -85,11 +85,24 @@ Median acknowledgement response time: **4.0 min · p95: 13.0 min**.
 | Test suite | `python -m pytest tests -q` |
 | Dashboard | `streamlit run dashboard/app.py` |
 
-## Deployment note
+## Documentation & Submission Artefacts
+
+- [**Data Dictionary**](docs/data_dictionary.md): Comprehensive schema, column types, cardinalities, and enums.
+- [**Architecture Guide**](docs/architecture.md): System components, data pipelines, and analytical layers.
+- [**AI Prompt History**](docs/PROMPTS.md): Complete prompt log across all 5 engineering phases.
+- [**AI Usage & Contribution Disclosure**](docs/AI_USAGE.md): Transparent disclosure of AI assistance and validation.
+- [**Submission Readiness Report**](docs/SUBMISSION_READINESS_REPORT.md): Audit against YottaFlex requirements.
+
+## Deployment Note
 
 The dashboard caches the prepared population keyed by a source-file fingerprint
-so a regeneration invalidates the cache automatically; the **Refresh data** button
-in the header clears the Streamlit cache explicitly.
+so a regeneration invalidates the cache automatically.
+
+## Developer
+
+**Gudepu Rakshitha Reddy**  
+*Computer Science Engineer | AI/ML Specialist | Project Developer*  
+Portfolio & Developer Profile integrated directly into the dashboard sidebar.
 
 ## Disclaimer
 

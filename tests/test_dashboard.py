@@ -116,3 +116,77 @@ def test_data_explorer_paginates_and_searches() -> None:
     assert len(at.dataframe) >= 1
     assert len(at.dataframe[0].value) == 25
     assert not at.exception
+
+def test_developer_profile_renders_content_and_links() -> None:
+    at = AppTest.from_file(APP_PATH, default_timeout=180)
+    at.run()
+    at.sidebar.radio[0].set_value("Developer Profile")
+    at.run()
+    assert not at.exception
+    assert not at.error
+
+    all_markdown = " ".join(block.value for block in at.markdown)
+    assert "GUDEPU RAKSHITHA REDDY" in all_markdown
+    assert "Computer Science Engineer | AI/ML Enthusiast" in all_markdown
+    assert "About Me" in all_markdown
+    assert "Alliance University, Bengaluru" in all_markdown
+    assert "8.9/10" in all_markdown
+    assert "7 research papers" in all_markdown
+    assert "100+ technical certifications" in all_markdown
+    assert "Technical Expertise" in all_markdown
+    assert "linkedin.com/in/gudepu-rakshitha-reddy-516aa72a9" in all_markdown
+    assert "github.com/GudepuRakshitha" in all_markdown
+    assert "researchgate.net/profile/Rakshitha-Reddy-Gudepu" in all_markdown
+    assert "blogger.com/profile/08555579845123121571" in all_markdown
+
+
+def test_about_developer_button_and_back_navigation() -> None:
+    at = AppTest.from_file(APP_PATH, default_timeout=180)
+    at.run()
+
+    # Click 'About the Developer' button
+    about_btn = next(b for b in at.button if b.label == "About the Developer")
+    about_btn.click()
+    at.run()
+    assert not at.exception
+    assert at.sidebar.radio[0].value == "Developer Profile"
+
+    # Click 'Back to Dashboard' button
+    back_btn = next(b for b in at.button if "Back to Dashboard" in b.label)
+    back_btn.click()
+    at.run()
+    assert not at.exception
+    assert at.sidebar.radio[0].value == "Overview"
+
+
+def test_attribution_button_navigation() -> None:
+    at = AppTest.from_file(APP_PATH, default_timeout=180)
+    at.run()
+
+    # Click attribution button
+    attr_btn = next(b for b in at.button if "Developed by Gudepu Rakshitha Reddy" in b.label)
+    attr_btn.click()
+    at.run()
+    assert not at.exception
+    assert at.sidebar.radio[0].value == "Developer Profile"
+
+def test_header_and_sidebar_alignment() -> None:
+    at = AppTest.from_file(APP_PATH, default_timeout=180)
+    at.run()
+    assert not at.exception
+    assert not at.error
+
+    all_markdown = " ".join(block.value for block in at.markdown)
+    # 1. Main heading and subtitle are fully present
+    assert "Industrial Safety Monitoring" in all_markdown
+    assert "Plant operations, alarm intelligence and incident oversight." in all_markdown
+
+    # 2. No Deploy or Refresh data buttons
+    button_labels = [b.label for b in at.button]
+    assert "Refresh data" not in button_labels
+    assert "Deploy" not in button_labels
+
+    # 3. Sidebar branding intact
+    assert "SAFEGUARD" in all_markdown
+    assert "Industrial Safety Intelligence" in all_markdown
+
