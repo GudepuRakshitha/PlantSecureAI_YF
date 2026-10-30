@@ -276,6 +276,7 @@ def render_developer_profile() -> None:
             key="btn_back_to_dashboard_top",
             on_click=navigate_to_dashboard,
             help="Return to industrial safety monitoring dashboard",
+            type="primary",
         )
     with top_col2:
         st.markdown(
@@ -417,6 +418,7 @@ def render_developer_profile() -> None:
             "← Back to Dashboard",
             key="btn_back_to_dashboard_bottom",
             on_click=navigate_to_dashboard,
+            type="primary",
         )
 
 

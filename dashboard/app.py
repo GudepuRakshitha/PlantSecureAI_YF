@@ -204,7 +204,7 @@ def render_sidebar() -> tuple[str, str]:
         )
 
         st.markdown('<div class="sidebar-divider"></div>', unsafe_allow_html=True)
-        st.markdown('<div class="sidebar-label">Data view</div>', unsafe_allow_html=True)
+        st.markdown('<div class="sidebar-label">Data View</div>', unsafe_allow_html=True)
         dataset_label = st.selectbox(
             "Dataset",
             list(MODE_OPTIONS),
@@ -212,12 +212,9 @@ def render_sidebar() -> tuple[str, str]:
             label_visibility="collapsed",
         )
         mode = MODE_OPTIONS[dataset_label]
-        caption = (
-            "Clean production-style population."
-            if mode == "baseline"
-            else "Baseline + injected test cases."
-        )
-        st.caption(caption)
+
+        profile.render_sidebar_profile(is_active=(page == "Developer Profile"))
+        profile.render_sidebar_attribution()
 
     return page, mode
 
@@ -1880,23 +1877,7 @@ def main() -> None:
             with st.expander("Technical details"):
                 st.code(f"{type(error).__name__}: {error}")
             return
-        activations_count = len(state["events"])
 
-    with st.sidebar:
-        st.markdown('<div class="sidebar-divider"></div>', unsafe_allow_html=True)
-        st.markdown('<div class="sidebar-label">System status</div>', unsafe_allow_html=True)
-        st.markdown(
-            '<div class="sidebar-footer"><span class="status-dot"></span>'
-            "Data pipeline online</div>",
-            unsafe_allow_html=True,
-        )
-        st.caption(
-            f"{config.DATASET_LABELS[mode]}  \n"
-            f"Seed {config.SEED}  \n"
-            f"{activations_count:,} activations in view"
-        )
-        profile.render_sidebar_profile(is_active=(page == "Developer Profile"))
-        profile.render_sidebar_attribution()
 
 
 if __name__ == "__main__":

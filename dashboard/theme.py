@@ -137,16 +137,16 @@ _CSS = f"""
   section[data-testid="stSidebar"] {{
       background: {COLORS['surface']} !important;
       border-right: 1px solid {COLORS['border']} !important;
-      min-width: 280px !important;
-      max-width: 280px !important;
-      width: 280px !important;
+      min-width: 295px !important;
+      max-width: 325px !important;
+      width: 305px !important;
   }}
   section[data-testid="stSidebar"] > div:first-child,
   section[data-testid="stSidebar"] [data-testid="stSidebarContent"] {{
-      padding-top: 0.75rem !important;
-      padding-left: 1rem !important;
-      padding-right: 1rem !important;
-      padding-bottom: 1.5rem !important;
+      padding-top: 0.85rem !important;
+      padding-left: 1.15rem !important;
+      padding-right: 1.15rem !important;
+      padding-bottom: 2rem !important;
   }}
   section[data-testid="stSidebar"] [data-testid="stSidebarHeader"] {{
       padding: 0.25rem 0.5rem 0 0.5rem !important;
@@ -435,20 +435,101 @@ _CSS = f"""
       font-size: 13px;
   }}
   .stButton > button, .stDownloadButton > button {{
-      border: 1px solid #D7DEE8;
-      background: {COLORS['surface']};
-      color: {COLORS['navy']};
-      border-radius: 6px;
-      font-size: 12.5px;
-      font-weight: 600;
-      padding: 5px 12px;
+      border: 1px solid #CBD5E1 !important;
+      background: {COLORS['surface']} !important;
+      color: {COLORS['navy']} !important;
+      border-radius: 6px !important;
+      font-size: 12.5px !important;
+      font-weight: 600 !important;
+      padding: 6px 14px !important;
+      box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04) !important;
+      transition: all .15s ease !important;
+  }}
+  .stButton > button *, .stDownloadButton > button * {{
+      color: {COLORS['navy']} !important;
+      font-weight: 600 !important;
   }}
   .stButton > button:hover, .stDownloadButton > button:hover {{
-      border-color: {COLORS['accent']};
-      color: {COLORS['accent']};
+      border-color: {COLORS['accent']} !important;
+      color: {COLORS['accent']} !important;
+      background: #F0F6FA !important;
+  }}
+  .stButton > button:hover *, .stDownloadButton > button:hover * {{
+      color: {COLORS['accent']} !important;
   }}
   .stButton > button:focus:not(:active) {{
-      border-color: {COLORS['accent']}; color: {COLORS['accent']};
+      border-color: {COLORS['accent']} !important;
+      color: {COLORS['accent']} !important;
+  }}
+
+  /* Back to Dashboard buttons: solid dark navy with bold pure white text */
+  .st-key-btn_back_to_dashboard_top button,
+  .st-key-btn_back_to_dashboard_bottom button,
+  div[data-testid="stButton"]:has(button[key*="btn_back_to_dashboard"]) button,
+  button[kind="primary"] {{
+      background: {COLORS['navy']} !important;
+      background-color: {COLORS['navy']} !important;
+      border: 1px solid {COLORS['navy']} !important;
+      color: #FFFFFF !important;
+      border-radius: 6px !important;
+      font-size: 13px !important;
+      font-weight: 700 !important;
+      padding: 7px 18px !important;
+      box-shadow: 0 1px 3px rgba(23, 50, 77, 0.2) !important;
+      cursor: pointer !important;
+  }}
+  .st-key-btn_back_to_dashboard_top button *,
+  .st-key-btn_back_to_dashboard_bottom button *,
+  .st-key-btn_back_to_dashboard_top button p,
+  .st-key-btn_back_to_dashboard_bottom button p,
+  .st-key-btn_back_to_dashboard_top button span,
+  .st-key-btn_back_to_dashboard_bottom button span,
+  .st-key-btn_back_to_dashboard_top button div,
+  .st-key-btn_back_to_dashboard_bottom button div,
+  button[kind="primary"] *,
+  button[kind="primary"] p {{
+      color: #FFFFFF !important;
+      font-weight: 700 !important;
+      font-size: 13px !important;
+      fill: #FFFFFF !important;
+  }}
+  .st-key-btn_back_to_dashboard_top button:hover,
+  .st-key-btn_back_to_dashboard_bottom button:hover,
+  button[kind="primary"]:hover {{
+      background: {COLORS['accent']} !important;
+      background-color: {COLORS['accent']} !important;
+      border-color: {COLORS['accent']} !important;
+      color: #FFFFFF !important;
+  }}
+  .st-key-btn_back_to_dashboard_top button:hover *,
+  .st-key-btn_back_to_dashboard_bottom button:hover *,
+  button[kind="primary"]:hover * {{
+      color: #FFFFFF !important;
+  }}
+
+  /* About the Developer button in sidebar */
+  .st-key-btn_about_developer_sidebar button {{
+      background: #F1F5F9 !important;
+      border: 1px solid #CBD5E1 !important;
+      color: {COLORS['navy']} !important;
+      font-weight: 600 !important;
+      font-size: 12.5px !important;
+      border-radius: 6px !important;
+      padding: 6px 12px !important;
+      width: 100% !important;
+      transition: all .15s ease !important;
+  }}
+  .st-key-btn_about_developer_sidebar button * {{
+      color: {COLORS['navy']} !important;
+      font-weight: 600 !important;
+  }}
+  .st-key-btn_about_developer_sidebar button:hover {{
+      background: {COLORS['accent']} !important;
+      border-color: {COLORS['accent']} !important;
+      color: #FFFFFF !important;
+  }}
+  .st-key-btn_about_developer_sidebar button:hover * {{
+      color: #FFFFFF !important;
   }}
   div[data-testid="stVerticalBlockBorderWrapper"] {{
       background: {COLORS['surface']};
