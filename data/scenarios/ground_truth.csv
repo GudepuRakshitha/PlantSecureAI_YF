@@ -1,6 +1,10 @@
-case_id,scenario_type,entity,record_id,description
-EDGE-001,ACK_BEFORE_ALARM,Acknowledgement,ACK-ALM-MCH-039-025929-EDGE01,Acknowledgement occurs two minutes before the alarm event.
-EDGE-002,IMPOSSIBLE_INTERLOCK_STATE,Interlock,INT-001-01,Current interlock state conflicts with the required safe state.
-EDGE-003,INCIDENT_WITHOUT_TRIGGER,Incident,INC-2026-000170,"Incident is linked to a LOW severity STOPPED event, which does not meet the unsafe-running rule."
-EDGE-004,ALARM_FLOOD_DUPLICATE_REPLAY,AlarmEvent,ALM-MCH-039-034656,The same alarm event is replayed three additional times with the same event ID.
-EDGE-005,CLOSED_WITHOUT_VERIFICATION,CorrectiveAction,ACT-INC-2026-000001-EDGE01,Corrective action is marked CLOSED without verification.
+case_id,scenario_type,expected_label,entity,record_id,is_anomaly,description
+EDGE-001,ACK_BEFORE_ALARM,ACK_BEFORE_ALARM,Acknowledgement,ACK-EDGE-001-01,True,Acknowledgement is logged two minutes before its alarm event.
+EDGE-002,IMPOSSIBLE_INTERLOCK_STATE,INTERLOCK_STATE_MISMATCH,Interlock,INT-EDGE-002,True,Current interlock state contradicts the required safe state.
+EDGE-003,INCIDENT_WITHOUT_TRIGGER,INCIDENT_WITHOUT_VALID_TRIGGER,Incident,INC-EDGE-003,True,"Incident is linked to a LOW severity STOPPED alarm, not a qualifying trigger."
+EDGE-004,ALARM_FLOOD_DUPLICATE_REPLAY,DUPLICATE_ALARM_REPLAY,AlarmEvent,ALM-EDGE-004-01,True,The same alarm event primary key is replayed twice.
+EDGE-005,CLOSED_WITHOUT_VERIFICATION,CLOSED_WITHOUT_VERIFICATION,CorrectiveAction,ACT-EDGE-005,True,Action is CLOSED but verification_status is NOT_VERIFIED.
+NC-001,NEGATIVE_CONTROL_ACK_AT_LIMIT,NO_ANOMALY,Acknowledgement,ACK-NC-001-01,False,Acknowledgement exactly at the configured limit is on time.
+NC-002,NEGATIVE_CONTROL_CONSISTENT_LIFECYCLE,NO_ANOMALY,Incident,INC-NC-002,False,"Closed incident with a verified, effective corrective action is valid."
+NC-003,NEGATIVE_CONTROL_NEAR_DUPLICATE,NO_ANOMALY,AlarmEvent,ALM-NC-003-01,False,Two distinct alarms three minutes apart are not a duplicate replay.
+NC-003,NEGATIVE_CONTROL_NEAR_DUPLICATE,NO_ANOMALY,AlarmEvent,ALM-NC-003-02,False,Two distinct alarms three minutes apart are not a duplicate replay.

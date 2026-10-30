@@ -1,2 +1,2 @@
-interlock_id,machine_id,interlock_name,required_state,current_state
-INT-001-01,MCH-001,Interlock 1,CLOSED,OPEN
+interlock_id,machine_id,interlock_name,required_state,current_state,case_id
+INT-EDGE-002,MCH-001,Injected state fault,CLOSED,OPEN,EDGE-002

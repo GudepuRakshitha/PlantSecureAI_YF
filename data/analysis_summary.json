@@ -1,19 +1,224 @@
 {
-    "baseline_alarm_events": 50000,
-    "scenario_alarm_event_rows": 3,
-    "total_alarm_event_rows_analyzed": 50003,
-    "total_exceptions": 8935,
-    "exceptions_by_type": {
-        "LATE_ACKNOWLEDGEMENT": 8930,
-        "ACK_BEFORE_ALARM": 1,
-        "INTERLOCK_STATE_MISMATCH": 1,
-        "INCIDENT_WITHOUT_VALID_TRIGGER": 1,
-        "DUPLICATE_ALARM_REPLAY": 1,
-        "CLOSED_WITHOUT_VERIFICATION": 1
+    "seed": 20261022,
+    "populations": {
+        "baseline": "Clean synthetic production-style data. Injected edge cases and negative controls are excluded from every KPI on this view.",
+        "scenario": "Baseline data plus five injected anomalies and three negative control records. Use this view only to inspect detector behaviour; its KPIs are not production metrics."
     },
-    "exceptions_by_severity": {
-        "MEDIUM": 8930,
-        "HIGH": 3,
-        "CRITICAL": 2
+    "timezone_policy": "All timestamps are naive local plant time (Asia/Kolkata, UTC+05:30).",
+    "thresholds": {
+        "chatter_n": 3,
+        "chatter_window_minutes": 60,
+        "flood_alarm_count": 10,
+        "flood_window_minutes": 10
+    },
+    "baseline": {
+        "row_counts": {
+            "plants": 4,
+            "safety_zones": 12,
+            "machines": 60,
+            "interlocks": 120,
+            "alarm_definitions": 200,
+            "operator_shifts": 372,
+            "alarm_events": 50000,
+            "acknowledgements": 45031,
+            "incidents": 169,
+            "corrective_actions": 169
+        },
+        "alarm_counts": {
+            "total_alarm_activations": 50000,
+            "critical_alarms": 11366,
+            "high_alarms": 13929,
+            "distinct_machines": 60,
+            "distinct_definitions": 200
+        },
+        "acknowledgement": {
+            "total_activations": 50000,
+            "total_acknowledged": 45031,
+            "total_unacknowledged": 4969,
+            "on_time_acknowledgements": 36101,
+            "late_acknowledgements": 8930,
+            "acknowledgement_rate_pct": 90.06,
+            "on_time_compliance_pct": 72.2,
+            "late_acknowledgement_pct": 17.86,
+            "unacknowledged_pct": 9.94,
+            "median_response_minutes": 4.0,
+            "p95_response_minutes": 13.0,
+            "mean_response_minutes": 4.49
+        },
+        "priority_compliance": [
+            {
+                "severity": "LOW",
+                "activations": 13570,
+                "acknowledged": 12210,
+                "on_time": 9739,
+                "late": 2471,
+                "unacknowledged": 1360,
+                "acknowledgement_rate_pct": 89.98,
+                "on_time_compliance_pct": 71.77,
+                "unacknowledged_pct": 10.02
+            },
+            {
+                "severity": "MEDIUM",
+                "activations": 11135,
+                "acknowledged": 10071,
+                "on_time": 8112,
+                "late": 1959,
+                "unacknowledged": 1064,
+                "acknowledgement_rate_pct": 90.44,
+                "on_time_compliance_pct": 72.85,
+                "unacknowledged_pct": 9.56
+            },
+            {
+                "severity": "HIGH",
+                "activations": 13929,
+                "acknowledged": 12524,
+                "on_time": 10039,
+                "late": 2485,
+                "unacknowledged": 1405,
+                "acknowledgement_rate_pct": 89.91,
+                "on_time_compliance_pct": 72.07,
+                "unacknowledged_pct": 10.09
+            },
+            {
+                "severity": "CRITICAL",
+                "activations": 11366,
+                "acknowledged": 10226,
+                "on_time": 8211,
+                "late": 2015,
+                "unacknowledged": 1140,
+                "acknowledgement_rate_pct": 89.97,
+                "on_time_compliance_pct": 72.24,
+                "unacknowledged_pct": 10.03
+            }
+        ],
+        "severity_distribution": [
+            {
+                "severity": "LOW",
+                "count": 13570,
+                "percentage": 27.14
+            },
+            {
+                "severity": "MEDIUM",
+                "count": 11135,
+                "percentage": 22.27
+            },
+            {
+                "severity": "HIGH",
+                "count": 13929,
+                "percentage": 27.86
+            },
+            {
+                "severity": "CRITICAL",
+                "count": 11366,
+                "percentage": 22.73
+            }
+        ],
+        "sla_breaches": 8930,
+        "genuine_anomalies": 0,
+        "incidents": {
+            "total_incidents": 169,
+            "open_incidents": 58,
+            "investigating_incidents": 48,
+            "closed_incidents": 63,
+            "closed_pct": 37.28,
+            "mean_resolution_hours": 61.08,
+            "median_resolution_hours": 54.0,
+            "closed_without_verified_action": 0,
+            "by_severity": {
+                "LOW": 0,
+                "MEDIUM": 0,
+                "HIGH": 85,
+                "CRITICAL": 84
+            },
+            "by_status": {
+                "CLOSED": 63,
+                "OPEN": 58,
+                "INVESTIGATING": 48
+            }
+        },
+        "corrective_actions": {
+            "total_actions": 169,
+            "open_actions": 28,
+            "in_progress_actions": 39,
+            "pending_verification_actions": 39,
+            "closed_actions": 63,
+            "verified_actions": 63,
+            "not_verified_actions": 0,
+            "pending_verification": 106,
+            "mean_closure_hours": 59.49,
+            "by_status": {
+                "CLOSED": 63,
+                "IN_PROGRESS": 39,
+                "PENDING_VERIFICATION": 39,
+                "OPEN": 28
+            },
+            "by_verification": {
+                "PENDING": 106,
+                "VERIFIED": 63
+            },
+            "by_effectiveness": {
+                "PENDING": 106,
+                "EFFECTIVE": 43,
+                "PARTIALLY_EFFECTIVE": 11,
+                "NOT_EFFECTIVE": 9
+            }
+        },
+        "alarm_status_counts": {
+            "CLEARED": 41199,
+            "UNACKNOWLEDGED": 4969,
+            "ACKNOWLEDGED": 3832
+        },
+        "chattering_pairs": 200,
+        "flood_episodes": 87
+    },
+    "scenario_test": {
+        "row_counts": {
+            "plants": 4,
+            "safety_zones": 12,
+            "machines": 60,
+            "interlocks": 121,
+            "alarm_definitions": 200,
+            "operator_shifts": 372,
+            "alarm_events": 50004,
+            "acknowledgements": 45033,
+            "incidents": 171,
+            "corrective_actions": 171
+        },
+        "genuine_anomalies": 5,
+        "exceptions_by_type": {
+            "ACK_BEFORE_ALARM": 1,
+            "INTERLOCK_STATE_MISMATCH": 1,
+            "INCIDENT_WITHOUT_VALID_TRIGGER": 1,
+            "DUPLICATE_ALARM_REPLAY": 1,
+            "CLOSED_WITHOUT_VERIFICATION": 1
+        },
+        "detection_report": {
+            "expected_anomalies": 5,
+            "detected_anomalies": 5,
+            "true_positives": 5,
+            "false_positives": 0,
+            "false_negatives": 0,
+            "precision": 1.0,
+            "recall": 1.0,
+            "expected_cases": [
+                "EDGE-001",
+                "EDGE-002",
+                "EDGE-003",
+                "EDGE-004",
+                "EDGE-005"
+            ],
+            "detected_cases": [
+                "EDGE-001",
+                "EDGE-002",
+                "EDGE-003",
+                "EDGE-004",
+                "EDGE-005"
+            ],
+            "missing_cases": [],
+            "negative_controls": 4,
+            "negative_controls_flagged": [],
+            "false_negative_details": [],
+            "false_positive_details": []
+        }
     }
 }

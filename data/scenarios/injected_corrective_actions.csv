@@ -1,2 +1,3 @@
-action_id,incident_id,action_description,assigned_to,created_at,closed_at,status,verification_status
-ACT-INC-2026-000001-EDGE01,INC-2026-000001,Inspect machine and verify safety interlock,MAINTENANCE_TEAM,2026-10-08 12:33:03,2026-10-08 14:23:03,CLOSED,NOT_VERIFIED
+action_id,incident_id,action_description,assigned_to,created_at,closed_at,verified_at,status,verification_status,effectiveness_status,case_id
+ACT-EDGE-005,INC-2026-000002,Injected closed-without-verification action,MAINTENANCE_TEAM,2026-10-01 12:39:42,2026-10-01 14:39:42,,CLOSED,NOT_VERIFIED,PENDING,EDGE-005
+ACT-NC-002,INC-NC-002,Negative control: verified corrective action,SAFETY_OFFICER,2026-10-01 00:21:13,2026-10-01 23:51:13,2026-10-02 00:01:13,CLOSED,VERIFIED,EFFECTIVE,NC-002

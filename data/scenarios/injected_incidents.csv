@@ -1,2 +1,3 @@
-incident_id,alarm_event_id,machine_id,plant_id,incident_type,severity,created_at,status
-INC-2026-000170,ALM-MCH-015-045125,MCH-015,PLT-001,UNSAFE_MACHINE_RUNNING,LOW,2026-10-01 00:02:01,OPEN
+incident_id,alarm_event_id,machine_id,plant_id,incident_type,severity,created_at,closed_at,status,case_id
+INC-EDGE-003,ALM-MCH-015-045125,MCH-015,PLT-001,UNSAFE_MACHINE_RUNNING,LOW,2026-10-01 00:02:01,,OPEN,EDGE-003
+INC-NC-002,ALM-MCH-039-034656,MCH-039,PLT-003,UNSAFE_MACHINE_RUNNING,CRITICAL,2026-10-01 00:01:13,2026-10-02 00:01:13,CLOSED,NC-002

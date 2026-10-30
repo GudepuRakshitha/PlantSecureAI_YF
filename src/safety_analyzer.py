@@ -1,250 +1,197 @@
+"""Analyze the safety dataset and export the analytical outputs.
 
-import pandas as pd
+The analyzer consumes two clearly separated populations:
+
+* **baseline** -- clean data, used for operational KPIs and SLA breaches;
+* **scenario test** -- baseline plus injected anomalies and negative controls,
+  used only to score the detector against ``ground_truth.csv``.
+
+Outputs
+-------
+``data/sla_breaches.csv``       routine late acknowledgements (baseline only)
+``data/analysis_exceptions.csv`` genuine anomalies found in the scenario run
+``data/analysis_summary.json``  both populations' metrics + detection score
+"""
+
+from __future__ import annotations
+
+import argparse
 import json
+import sys
+from dataclasses import asdict
 from pathlib import Path
 
-DATA = Path("data")
-SCENARIOS = DATA / "scenarios"
+import pandas as pd
 
-# Load baseline datasets
-events = pd.read_csv(DATA / "alarm_events.csv")
-definitions = pd.read_csv(DATA / "alarm_definitions.csv")
-acks = pd.read_csv(DATA / "acknowledgements.csv")
-incidents = pd.read_csv(DATA / "incidents.csv")
-actions = pd.read_csv(DATA / "corrective_actions.csv")
-interlocks = pd.read_csv(DATA / "interlocks.csv")
+if __package__ in (None, ""):
+    sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-# Load injected scenario datasets
-extra_events = pd.read_csv(SCENARIOS / "injected_alarm_events.csv")
-extra_acks = pd.read_csv(SCENARIOS / "injected_acknowledgements.csv")
-extra_interlocks = pd.read_csv(SCENARIOS / "injected_interlocks.csv")
-extra_incidents = pd.read_csv(SCENARIOS / "injected_incidents.csv")
-extra_actions = pd.read_csv(SCENARIOS / "injected_corrective_actions.csv")
-
-# Combine baseline and scenario records for analysis
-all_events = pd.concat([events, extra_events], ignore_index=True)
-all_acks = pd.concat([acks, extra_acks], ignore_index=True)
-all_interlocks = pd.concat(
-    [interlocks, extra_interlocks], ignore_index=True
-)
-all_incidents = pd.concat(
-    [incidents, extra_incidents], ignore_index=True
-)
-all_actions = pd.concat(
-    [actions, extra_actions], ignore_index=True
-)
-
-exceptions = []
+from src import config, data_access, detection, metrics, schema
 
 
-def add_exception(category, entity, record_id, severity, description):
-    exceptions.append({
-        "exception_type": category,
-        "entity": entity,
-        "record_id": str(record_id),
-        "severity": severity,
-        "description": description
-    })
+def _serialisable(value: object) -> object:
+    """Convert numpy/pandas scalars to JSON-friendly values."""
+    if isinstance(value, dict):
+        return {str(key): _serialisable(item) for key, item in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [_serialisable(item) for item in value]
+    if hasattr(value, "item"):
+        return value.item()
+    return value
 
 
-# --------------------------------------------------
-# 1. ACKNOWLEDGEMENT VALIDATION
-# --------------------------------------------------
+def analyze(data_dir: Path = config.DATA_DIR, write: bool = True) -> dict[str, object]:
+    """Run baseline analysis and scenario detection."""
+    data_dir = Path(data_dir)
 
-event_times = events[["alarm_event_id", "event_timestamp"]].copy()
+    baseline = data_access.prepare_population("baseline", data_dir)
+    scenario = data_access.prepare_population("scenario", data_dir)
 
-ack_check = all_acks.merge(
-    event_times,
-    on="alarm_event_id",
-    how="left"
-)
+    baseline_events = baseline["events"]
+    baseline_ack = baseline["ack_metrics"]
+    baseline_incidents = baseline["incident_metrics"]
+    baseline_actions = baseline["action_metrics"]
+    breaches = baseline["sla_breaches"]
+    baseline_exceptions = baseline["exceptions"]
 
-ack_check["ack_timestamp"] = pd.to_datetime(
-    ack_check["ack_timestamp"]
-)
-ack_check["event_timestamp"] = pd.to_datetime(
-    ack_check["event_timestamp"]
-)
-
-for _, row in ack_check.iterrows():
-    if pd.isna(row["event_timestamp"]):
-        add_exception(
-            "ACK_WITHOUT_ALARM",
-            "Acknowledgement",
-            row["acknowledgement_id"],
-            "HIGH",
-            "Acknowledgement references an unknown alarm event."
-        )
-    elif row["ack_timestamp"] < row["event_timestamp"]:
-        add_exception(
-            "ACK_BEFORE_ALARM",
-            "Acknowledgement",
-            row["acknowledgement_id"],
-            "CRITICAL",
-            "Acknowledgement occurred before the alarm."
+    if baseline_exceptions is not None and not baseline_exceptions.empty:
+        raise RuntimeError(
+            "Baseline data produced anomalies; the baseline must be clean. "
+            f"Found {len(baseline_exceptions)}. Run the validators for details."
         )
 
-# Check acknowledgement response-time limits
-event_definition = events[
-    ["alarm_event_id", "alarm_definition_id"]
-]
+    scenario_exceptions = scenario["exceptions"]
+    report = scenario["detection_report"]
 
-ack_sla = all_acks.merge(
-    event_definition,
-    on="alarm_event_id",
-    how="left"
-).merge(
-    definitions[
-        [
-            "alarm_definition_id",
-            "acknowledgement_required",
-            "acknowledgement_limit_minutes"
-        ]
-    ],
-    on="alarm_definition_id",
-    how="left"
-)
-
-for _, row in ack_sla.iterrows():
-    if (
-        row["acknowledgement_required"] == True
-        and pd.notna(row["response_minutes"])
-        and row["response_minutes"] >
-        row["acknowledgement_limit_minutes"]
-    ):
-        add_exception(
-            "LATE_ACKNOWLEDGEMENT",
-            "Acknowledgement",
-            row["acknowledgement_id"],
-            "MEDIUM",
-            "Acknowledgement exceeded the allowed response time."
-        )
-
-
-# --------------------------------------------------
-# 2. INTERLOCK VALIDATION
-# --------------------------------------------------
-
-for _, row in all_interlocks.iterrows():
-    if row["current_state"] != row["required_state"]:
-        add_exception(
-            "INTERLOCK_STATE_MISMATCH",
-            "Interlock",
-            row["interlock_id"],
-            "CRITICAL",
-            "Current interlock state does not match required safe state."
-        )
-
-
-# --------------------------------------------------
-# 3. INCIDENT TRIGGER VALIDATION
-# --------------------------------------------------
-
-incident_check = all_incidents.merge(
-    all_events[
-        [
-            "alarm_event_id",
-            "severity",
-            "machine_state"
-        ]
-    ].drop_duplicates("alarm_event_id"),
-    on="alarm_event_id",
-    how="left",
-    suffixes=("_incident", "_event")
-)
-
-for _, row in incident_check.iterrows():
-    valid_trigger = (
-        row["severity_event"] in ["HIGH", "CRITICAL"]
-        and row["machine_state"] == "RUNNING"
-    ) if pd.notna(row["severity_event"]) else False
-
-    if not valid_trigger:
-        add_exception(
-            "INCIDENT_WITHOUT_VALID_TRIGGER",
-            "Incident",
-            row["incident_id"],
-            "HIGH",
-            "Incident has no qualifying HIGH/CRITICAL alarm while machine is RUNNING."
-        )
-
-
-# --------------------------------------------------
-# 4. DUPLICATE ALARM / FLOOD DETECTION
-# --------------------------------------------------
-
-duplicate_counts = all_events.groupby(
-    "alarm_event_id"
-).size()
-
-for event_id, count in duplicate_counts.items():
-    if count > 1:
-        add_exception(
-            "DUPLICATE_ALARM_REPLAY",
-            "AlarmEvent",
-            event_id,
-            "HIGH",
-            f"Alarm event appears {count} times."
-        )
-
-
-# --------------------------------------------------
-# 5. CORRECTIVE ACTION VERIFICATION
-# --------------------------------------------------
-
-for _, row in all_actions.iterrows():
-    if (
-        row["status"] == "CLOSED"
-        and row["verification_status"] != "VERIFIED"
-    ):
-        add_exception(
-            "CLOSED_WITHOUT_VERIFICATION",
-            "CorrectiveAction",
-            row["action_id"],
-            "HIGH",
-            "Action is closed without successful verification."
-        )
-
-
-# --------------------------------------------------
-# EXPORT RESULTS
-# --------------------------------------------------
-
-results = pd.DataFrame(exceptions)
-
-if results.empty:
-    results = pd.DataFrame(columns=[
-        "exception_type",
-        "entity",
-        "record_id",
-        "severity",
-        "description"
-    ])
-
-results.to_csv(DATA / "analysis_exceptions.csv", index=False)
-
-summary = {
-    "baseline_alarm_events": int(len(events)),
-    "scenario_alarm_event_rows": int(len(extra_events)),
-    "total_alarm_event_rows_analyzed": int(len(all_events)),
-    "total_exceptions": int(len(results)),
-    "exceptions_by_type": {
-        str(key): int(value)
-        for key, value in results["exception_type"].value_counts().items()
-    },
-    "exceptions_by_severity": {
-        str(key): int(value)
-        for key, value in results["severity"].value_counts().items()
+    summary = {
+        "seed": config.SEED,
+        "populations": {
+            "baseline": config.DATASET_DESCRIPTIONS["baseline"],
+            "scenario": config.DATASET_DESCRIPTIONS["scenario"],
+        },
+        "timezone_policy": (
+            "All timestamps are naive local plant time (Asia/Kolkata, UTC+05:30)."
+        ),
+        "thresholds": asdict(config.THRESHOLDS),
+        "baseline": {
+            "row_counts": baseline["row_counts"],
+            "alarm_counts": metrics.alarm_counts(baseline_events),
+            "acknowledgement": baseline_ack,
+            "priority_compliance": metrics.priority_compliance(
+                baseline["compliance"]
+            ).to_dict(orient="records"),
+            "severity_distribution": metrics.severity_distribution(
+                baseline_events
+            ).to_dict(orient="records"),
+            "sla_breaches": int(len(breaches)),
+            "genuine_anomalies": 0,
+            "incidents": baseline_incidents,
+            "corrective_actions": baseline_actions,
+            "alarm_status_counts": {
+                str(key): int(value)
+                for key, value in baseline_events["alarm_status"]
+                .value_counts()
+                .items()
+            },
+            "chattering_pairs": int(
+                len(
+                    metrics.detect_chattering(
+                        baseline_events,
+                        definitions=baseline["definitions"],
+                        machines=baseline["machines"],
+                    )
+                )
+            ),
+            "flood_episodes": int(
+                len(
+                    metrics.detect_floods(
+                        baseline_events, plants=baseline["plants"]
+                    )
+                )
+            ),
+        },
+        "scenario_test": {
+            "row_counts": scenario["row_counts"],
+            "genuine_anomalies": int(len(scenario_exceptions)),
+            "exceptions_by_type": (
+                {
+                    str(key): int(value)
+                    for key, value in scenario_exceptions["exception_type"]
+                    .value_counts()
+                    .items()
+                }
+                if not scenario_exceptions.empty
+                else {}
+            ),
+            "detection_report": report,
+        },
     }
-}
+    summary = _serialisable(summary)
 
-with open(DATA / "analysis_summary.json", "w") as file:
-    json.dump(summary, file, indent=4)
+    if write:
+        data_dir.mkdir(parents=True, exist_ok=True)
+        breaches.to_csv(
+            data_dir / schema.SLA_BREACHES.filename,
+            index=False,
+            date_format="%Y-%m-%d %H:%M:%S",
+        )
+        scenario_exceptions.to_csv(
+            data_dir / schema.ANALYSIS_EXCEPTIONS.filename,
+            index=False,
+        )
+        with open(data_dir / "analysis_summary.json", "w", encoding="utf-8") as file:
+            json.dump(summary, file, indent=4)
 
-print("\n========== SAFETY ANALYSIS COMPLETE ==========")
-print("Alarm event rows analyzed:", len(all_events))
-print("Exceptions detected:", len(results))
-print("\nExceptions by type:")
-print(results["exception_type"].value_counts().to_string())
-print("\nSaved: data/analysis_exceptions.csv")
-print("Saved: data/analysis_summary.json")
+    return summary
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--data-dir", type=Path, default=config.DATA_DIR)
+    parser.add_argument(
+        "--no-write", action="store_true", help="compute metrics without writing files"
+    )
+    args = parser.parse_args(argv)
+
+    summary = analyze(args.data_dir, write=not args.no_write)
+    baseline = summary["baseline"]
+    ack = baseline["acknowledgement"]
+    scenario = summary["scenario_test"]
+
+    print("\n========== SAFETY ANALYSIS COMPLETE ==========")
+    print(f"Seed: {config.SEED}")
+    print("\nBASELINE POPULATION")
+    print(f"  Alarm activations      : {ack['total_activations']:,}")
+    print(f"  Acknowledged           : {ack['total_acknowledged']:,}")
+    print(f"  Unacknowledged         : {ack['total_unacknowledged']:,}")
+    print(f"  On time                : {ack['on_time_acknowledgements']:,}")
+    print(f"  Late                   : {ack['late_acknowledgements']:,}")
+    print(f"  Acknowledgement rate   : {ack['acknowledgement_rate_pct']:.2f}%")
+    print(f"  On-time compliance     : {ack['on_time_compliance_pct']:.2f}%")
+    print(f"  Late                   : {ack['late_acknowledgement_pct']:.2f}%")
+    print(f"  Unacknowledged         : {ack['unacknowledged_pct']:.2f}%")
+    print(f"  Median response        : {ack['median_response_minutes']:.2f} min")
+    print(f"  P95 response           : {ack['p95_response_minutes']:.2f} min")
+    print(f"  Routine SLA breaches   : {baseline['sla_breaches']:,}")
+    print(f"  Genuine anomalies      : {baseline['genuine_anomalies']}")
+
+    print("\nSCENARIO TEST POPULATION")
+    print(f"  Genuine anomalies      : {scenario['genuine_anomalies']}")
+    if scenario["detection_report"]:
+        report = scenario["detection_report"]
+        print(f"  True positives         : {report['true_positives']}")
+        print(f"  False positives        : {report['false_positives']}")
+        print(f"  False negatives        : {report['false_negatives']}")
+        print(f"  Precision / recall     : {report['precision']:.2f} / {report['recall']:.2f}")
+        print(f"  Cases detected         : {', '.join(report['detected_cases']) or 'none'}")
+        print(f"  Negative controls hit  : {len(report['negative_controls_flagged'])}")
+
+    if not args.no_write:
+        print(f"\nSaved: {args.data_dir / schema.SLA_BREACHES.filename}")
+        print(f"Saved: {args.data_dir / schema.ANALYSIS_EXCEPTIONS.filename}")
+        print(f"Saved: {args.data_dir / 'analysis_summary.json'}")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
